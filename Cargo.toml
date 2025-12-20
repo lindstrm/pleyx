@@ -1,0 +1,54 @@
+[package]
+name = "pleyx"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# System tray
+tray-icon = "0.19"
+tao = { version = "0.31", default-features = false, features = ["rwh_06"] }
+
+# Discord Rich Presence
+discord-rich-presence = "0.2"
+
+# HTTP client for Plex API
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Config file paths
+dirs = "5"
+
+# URL encoding
+urlencoding = "2"
+
+# Base64 encoding for Discord external URLs
+base64 = "0.22"
+
+# Open files with default application
+open = "5"
+
+# Image loading for tray icon
+image = "0.25"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
+[[bin]]
+name = "pleyx"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
