@@ -13,6 +13,17 @@ namespace fs = std::filesystem;
 
 fs::path Config::configPath() {
 #ifdef _WIN32
+    // First check for config in same directory as exe (portable mode)
+    wchar_t exePath[MAX_PATH];
+    if (GetModuleFileNameW(nullptr, exePath, MAX_PATH)) {
+        fs::path exeDir = fs::path(exePath).parent_path();
+        fs::path portableConfig = exeDir / "config.json";
+        if (fs::exists(portableConfig)) {
+            return portableConfig;
+        }
+    }
+
+    // Fall back to AppData
     char path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, path))) {
         fs::path configDir = fs::path(path) / "pleyx";
