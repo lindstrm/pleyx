@@ -17,18 +17,29 @@ A lightweight Windows system tray application that displays your Plex playback s
 ## Discord Display
 
 **TV Shows:**
+
+![TV Show](resources/discord-show.jpg)
+
+
 - Details: Show name
 - State: S01E05 • Episode Title
 - Large Image: Show poster
 - Button: View on IMDB (when available)
 
 **Movies:**
+
+![Movie](resources/discord-movie.jpg)
+
 - Details: Movie Title (Year)
 - State: 7.6/10 • 85% • Genre, Genre (ratings require OMDB API key)
 - Large Image: Movie poster
 - Button: View on IMDB (when available)
 
 **Music:**
+
+![Music](resources/discord-music.jpg)
+
+
 - Details: Track Title
 - State: Genre
 - Large Image: Album art
