@@ -20,11 +20,13 @@ A lightweight Windows system tray application that displays your Plex playback s
 - Details: Show name
 - State: S01E05 • Episode Title
 - Large Image: Show poster
+- Button: View on IMDB (when available)
 
 **Movies:**
 - Details: Movie Title (Year)
 - State: 7.6/10 • 85% • Genre, Genre (ratings require OMDB API key)
 - Large Image: Movie poster
+- Button: View on IMDB (when available)
 
 **Music:**
 - Details: Track Title
