@@ -68,9 +68,12 @@ void Config::save() const {
         {"plex_url", plexUrl},
         {"plex_token", plexToken},
         {"polling_interval_secs", pollingIntervalSecs},
-        {"start_at_boot", startAtBoot},
-        {"debug", debug}
+        {"start_at_boot", startAtBoot}
     };
+    // Only include debug if it's enabled (hidden option)
+    if (debug) {
+        j["debug"] = true;
+    }
 
     try {
         std::ofstream file(path);
@@ -88,8 +91,7 @@ void Config::saveDefault() {
         {"plex_url", "http://localhost:32400"},
         {"plex_token", "YOUR_PLEX_TOKEN_HERE"},
         {"polling_interval_secs", 15},
-        {"start_at_boot", false},
-        {"debug", false}
+        {"start_at_boot", false}
     };
 
     try {
