@@ -45,6 +45,8 @@ A lightweight Windows system tray application that displays your Plex playback s
 - Large Image: Album art
 - Large Text: Artist - Album
 
+> **Note:** Due to Discord limitations, you cannot see the IMDB button on your own profile. Only other users viewing your profile will see it.
+
 ## Installation
 
 ### Pre-built Binary
