@@ -6,7 +6,8 @@ A lightweight Windows system tray application that displays your Plex playback s
 
 - Shows currently playing media in Discord profile
 - Supports Movies, TV Shows, and Music
-- Displays media artwork from Plex (uploaded to catbox.moe)
+- Displays media artwork (OMDB posters or Plex art via catbox.moe)
+- Shows IMDB and Rotten Tomatoes ratings for movies/shows (requires OMDB API key)
 - Activity type changes based on media (Watching/Listening)
 - Auto-hides presence when paused or stopped
 - System tray with color/grayscale icon based on playback state
@@ -22,7 +23,7 @@ A lightweight Windows system tray application that displays your Plex playback s
 
 **Movies:**
 - Details: Movie Title (Year)
-- State: Genre, Genre, Genre
+- State: 7.6/10 • 85% • Genre, Genre (ratings require OMDB API key)
 - Large Image: Movie poster
 
 **Music:**
@@ -61,13 +62,14 @@ cmake --build build --config Release
 
 On first run, a config file is created at `%APPDATA%\pleyx\config.json`
 
+You can also place a `config.json` in the same directory as the exe for portable mode.
+
 ```json
 {
     "plex_url": "http://localhost:32400",
     "plex_token": "YOUR_PLEX_TOKEN_HERE",
     "polling_interval_secs": 15,
-    "start_at_boot": false,
-    "debug": false
+    "start_at_boot": false
 }
 ```
 
@@ -77,6 +79,21 @@ On first run, a config file is created at `%APPDATA%\pleyx\config.json`
 | `plex_token` | Your Plex authentication token |
 | `polling_interval_secs` | How often to check for playback (seconds) |
 | `start_at_boot` | Launch Pleyx when Windows starts |
+
+### Optional Settings
+
+These can be added manually to enable additional features:
+
+```json
+{
+    "omdb_api_key": "your_omdb_api_key",
+    "debug": true
+}
+```
+
+| Option | Description |
+|--------|-------------|
+| `omdb_api_key` | OMDB API key for posters and ratings ([get one free](https://www.omdbapi.com/apikey.aspx)) |
 | `debug` | Show console window with debug output |
 
 ### Getting Your Plex Token

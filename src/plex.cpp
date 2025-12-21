@@ -2,6 +2,8 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <regex>
+#include <fstream>
+#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -10,6 +12,128 @@
 #endif
 
 using json = nlohmann::json;
+
+// OMDB API key set from config
+static std::string g_omdbApiKey;
+
+void setOmdbApiKey(const std::string& apiKey) {
+    g_omdbApiKey = apiKey;
+    if (!apiKey.empty()) {
+        std::cout << "[OMDB] API key configured" << std::endl;
+    }
+}
+
+struct OmdbResult {
+    std::string imdbId;
+    std::string posterUrl;
+    std::string imdbRating;
+    std::string rottenTomatoesRating;
+};
+
+static OmdbResult queryOmdb(const std::string& title, int year, bool isShow) {
+    OmdbResult result;
+    if (g_omdbApiKey.empty()) return result;
+
+#ifdef _WIN32
+    // URL encode title
+    std::string encodedTitle;
+    for (char c : title) {
+        if (isalnum(c) || c == '-' || c == '_' || c == '.') {
+            encodedTitle += c;
+        } else if (c == ' ') {
+            encodedTitle += '+';
+        } else {
+            char hex[4];
+            snprintf(hex, sizeof(hex), "%%%02X", static_cast<unsigned char>(c));
+            encodedTitle += hex;
+        }
+    }
+
+    std::string path = "/?apikey=" + g_omdbApiKey + "&t=" + encodedTitle;
+    if (year > 0) {
+        path += "&y=" + std::to_string(year);
+    }
+    if (isShow) {
+        path += "&type=series";
+    }
+
+    std::wstring wPath(path.begin(), path.end());
+
+    HINTERNET hSession = WinHttpOpen(L"Pleyx/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+        WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) return result;
+
+    HINTERNET hConnect = WinHttpConnect(hSession, L"www.omdbapi.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!hConnect) {
+        WinHttpCloseHandle(hSession);
+        return result;
+    }
+
+    HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", wPath.c_str(),
+        nullptr, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+    if (!hRequest) {
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return result;
+    }
+
+    if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+        WINHTTP_NO_REQUEST_DATA, 0, 0, 0) || !WinHttpReceiveResponse(hRequest, nullptr)) {
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return result;
+    }
+
+    std::string response;
+    DWORD bytesAvailable = 0;
+    DWORD bytesRead = 0;
+    while (WinHttpQueryDataAvailable(hRequest, &bytesAvailable) && bytesAvailable > 0) {
+        std::vector<char> buffer(bytesAvailable + 1);
+        if (WinHttpReadData(hRequest, buffer.data(), bytesAvailable, &bytesRead)) {
+            response.append(buffer.data(), bytesRead);
+        }
+    }
+
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+
+    try {
+        auto j = json::parse(response);
+        if (j.value("Response", "") == "True") {
+            if (j.contains("imdbID")) {
+                result.imdbId = j["imdbID"].get<std::string>();
+                std::cout << "[OMDB] Found IMDB ID: " << result.imdbId << std::endl;
+            }
+            if (j.contains("Poster")) {
+                std::string poster = j["Poster"].get<std::string>();
+                if (poster != "N/A" && !poster.empty()) {
+                    result.posterUrl = poster;
+                    std::cout << "[OMDB] Found poster: " << poster << std::endl;
+                }
+            }
+            // Parse ratings array
+            if (j.contains("Ratings") && j["Ratings"].is_array()) {
+                for (auto& rating : j["Ratings"]) {
+                    std::string source = rating.value("Source", "");
+                    std::string value = rating.value("Value", "");
+                    if (source == "Internet Movie Database" && !value.empty()) {
+                        result.imdbRating = value;
+                        std::cout << "[OMDB] IMDB rating: " << value << std::endl;
+                    } else if (source == "Rotten Tomatoes" && !value.empty()) {
+                        result.rottenTomatoesRating = value;
+                        std::cout << "[OMDB] RT rating: " << value << std::endl;
+                    }
+                }
+            }
+        }
+    } catch (...) {}
+#endif
+    return result;
+}
 
 std::string NowPlaying::displayTitle() const {
     switch (mediaType) {
@@ -253,6 +377,28 @@ std::optional<NowPlaying> PlexClient::getNowPlaying() {
                     np.imdbId = id.substr(7);
                     break;
                 }
+            }
+        }
+
+        // Query OMDB for IMDB ID and poster (for movies and shows only)
+        if (np.mediaType != MediaType::Track) {
+            std::string searchTitle = (np.mediaType == MediaType::Episode && np.grandparentTitle)
+                ? *np.grandparentTitle : np.title;
+            int searchYear = np.year.value_or(0);
+            bool isShow = (np.mediaType == MediaType::Episode);
+
+            OmdbResult omdb = queryOmdb(searchTitle, searchYear, isShow);
+            if (!omdb.imdbId.empty() && !np.imdbId) {
+                np.imdbId = omdb.imdbId;
+            }
+            if (!omdb.posterUrl.empty()) {
+                np.posterUrl = omdb.posterUrl;
+            }
+            if (!omdb.imdbRating.empty()) {
+                np.imdbRating = omdb.imdbRating;
+            }
+            if (!omdb.rottenTomatoesRating.empty()) {
+                np.rottenTomatoesRating = omdb.rottenTomatoesRating;
             }
         }
 

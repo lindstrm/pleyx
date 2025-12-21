@@ -29,6 +29,9 @@ struct NowPlaying {
     std::optional<int> seasonNumber;
     std::optional<int> episodeNumber;
     std::optional<std::string> imdbId;
+    std::optional<std::string> posterUrl;         // Poster URL from OMDB
+    std::optional<std::string> imdbRating;        // IMDB rating (e.g. "8.0/10")
+    std::optional<std::string> rottenTomatoesRating; // RT rating (e.g. "85%")
     std::optional<std::string> artPath;           // Path to artwork (e.g. /library/metadata/123/art)
     std::vector<std::string> genres;
     int64_t durationMs = 0;
@@ -37,6 +40,9 @@ struct NowPlaying {
     std::string displayTitle() const;
     std::string stateText() const;
 };
+
+// Set OMDB API key for IMDB lookups
+void setOmdbApiKey(const std::string& apiKey);
 
 class PlexClient {
 public:

@@ -203,6 +203,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
     std::cout << "[Plex] Connected to server" << std::endl;
 
+    // Set OMDB API key if configured
+    if (!config.omdbApiKey.empty()) {
+        setOmdbApiKey(config.omdbApiKey);
+    }
+
     // Create Discord client
     Discord discord(DISCORD_CLIENT_ID);
 
@@ -272,9 +277,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
                     info.progressMs = np.progressMs;
                     info.imdbId = np.imdbId;
 
-                    // Get artwork URL from catbox if available
+                    // Get artwork URL - prefer OMDB poster, fall back to catbox
                     std::string artUrl;
-                    if (np.artPath) {
+                    if (np.posterUrl) {
+                        artUrl = *np.posterUrl;
+                    } else if (np.artPath) {
                         artUrl = imageCache.getCatboxUrl(*np.artPath);
                     }
 
@@ -298,17 +305,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
                             info.activityType = ActivityType::Watching;
                             info.largeImage = artUrl.empty() ? "movie" : artUrl;
                             info.largeText = np.title;
-                            // Join genres with comma
-                            if (!np.genres.empty()) {
-                                std::string genreStr;
-                                for (size_t i = 0; i < np.genres.size(); i++) {
-                                    if (i > 0) genreStr += ", ";
-                                    genreStr += np.genres[i];
-                                }
-                                info.state = genreStr;
-                            } else {
-                                info.state = np.stateText();
+                            // Build state: ratings • genres
+                            std::string stateStr;
+                            if (np.imdbRating) {
+                                stateStr = *np.imdbRating;
                             }
+                            if (np.rottenTomatoesRating) {
+                                if (!stateStr.empty()) stateStr += " • ";
+                                stateStr += *np.rottenTomatoesRating;
+                            }
+                            if (!np.genres.empty()) {
+                                if (!stateStr.empty()) stateStr += " • ";
+                                for (size_t i = 0; i < np.genres.size(); i++) {
+                                    if (i > 0) stateStr += ", ";
+                                    stateStr += np.genres[i];
+                                }
+                            }
+                            info.state = stateStr.empty() ? np.stateText() : stateStr;
                             break;
                         }
                         case MediaType::Track: {

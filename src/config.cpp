@@ -50,6 +50,7 @@ Config Config::load() {
 
             cfg.plexUrl = j.value("plex_url", "http://localhost:32400");
             cfg.plexToken = j.value("plex_token", "");
+            cfg.omdbApiKey = j.value("omdb_api_key", "");
             cfg.pollingIntervalSecs = j.value("polling_interval_secs", 15);
             cfg.startAtBoot = j.value("start_at_boot", false);
             cfg.debug = j.value("debug", false);
@@ -70,7 +71,10 @@ void Config::save() const {
         {"polling_interval_secs", pollingIntervalSecs},
         {"start_at_boot", startAtBoot}
     };
-    // Only include debug if it's enabled (hidden option)
+    // Only include optional keys if set
+    if (!omdbApiKey.empty()) {
+        j["omdb_api_key"] = omdbApiKey;
+    }
     if (debug) {
         j["debug"] = true;
     }
