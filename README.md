@@ -1,18 +1,35 @@
 # Pleyx
 
-A lightweight system tray application that displays your Plex playback status as Discord Rich Presence.
-
-![Discord Rich Presence Example](https://via.placeholder.com/300x100?text=Plex+Discord+Presence)
+A lightweight Windows system tray application that displays your Plex playback status as Discord Rich Presence.
 
 ## Features
 
 - Shows currently playing media in Discord profile
 - Supports Movies, TV Shows, and Music
-- Displays episode info (S01E05 format)
-- Shows playback progress (elapsed / total)
+- Displays media artwork from Plex (uploaded to catbox.moe)
+- Activity type changes based on media (Watching/Listening)
 - Auto-hides presence when paused or stopped
-- Minimal resource usage (Rust-based)
-- System tray with status display
+- System tray with color/grayscale icon based on playback state
+- Start at boot option
+- Minimal resource usage
+
+## Discord Display
+
+**TV Shows:**
+- Details: Show name
+- State: S01E05 • Episode Title
+- Large Image: Show poster
+
+**Movies:**
+- Details: Movie Title (Year)
+- State: Genre, Genre, Genre
+- Large Image: Movie poster
+
+**Music:**
+- Details: Track Title
+- State: Genre
+- Large Image: Album art
+- Large Text: Artist - Album
 
 ## Installation
 
@@ -22,33 +39,45 @@ Download the latest release from the [Releases](../../releases) page.
 
 ### Build from Source
 
+Requires:
+- CMake 3.16+
+- Visual Studio 2019+ (or MSVC Build Tools)
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/pleyx.git
 cd pleyx
 
-# Build release binary
-cargo build --release
+# Configure
+cmake -S . -B build
 
-# Binary will be at target/release/pleyx.exe
+# Build
+cmake --build build --config Release
+
+# Binary will be at build/Release/pleyx.exe
 ```
 
 ## Configuration
 
-On first run, a config file is created at:
-- **Windows**: `%APPDATA%\pleyx\config.toml`
-- **Linux**: `~/.config/pleyx/config.toml`
-- **macOS**: `~/Library/Application Support/pleyx/config.toml`
+On first run, a config file is created at `%APPDATA%\pleyx\config.json`
 
-Edit the config with your Plex details:
-
-```toml
-[plex]
-server_url = "http://localhost:32400"
-token = "YOUR_PLEX_TOKEN"
-
-polling_interval_secs = 15
+```json
+{
+    "plex_url": "http://localhost:32400",
+    "plex_token": "YOUR_PLEX_TOKEN_HERE",
+    "polling_interval_secs": 15,
+    "start_at_boot": false,
+    "debug": false
+}
 ```
+
+| Option | Description |
+|--------|-------------|
+| `plex_url` | URL to your Plex server |
+| `plex_token` | Your Plex authentication token |
+| `polling_interval_secs` | How often to check for playback (seconds) |
+| `start_at_boot` | Launch Pleyx when Windows starts |
+| `debug` | Show console window with debug output |
 
 ### Getting Your Plex Token
 
@@ -59,39 +88,36 @@ polling_interval_secs = 15
 
 Or visit: https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
 
-## Usage
+## Setup
 
-1. Configure your Plex token in the config file
-2. Run `pleyx.exe`
-3. The app appears in your system tray
-4. Play something on Plex - it will show in your Discord status!
+### 1. Authorize Discord Application
+
+First, authorize the Pleyx Discord application on your account:
+
+**[Click here to authorize Pleyx](https://discord.com/oauth2/authorize?client_id=1451961488427188355)**
+
+### 2. Configure Plex Token
+
+Edit the config file with your Plex token (see "Getting Your Plex Token" above).
+
+### 3. Run Pleyx
+
+1. Run `pleyx.exe`
+2. The app appears in your system tray (grayscale icon)
+3. Play something on Plex - icon turns color and Discord status updates!
 
 ### System Tray Menu
 
 Right-click the tray icon to:
-- See what's currently playing
-- Open the config file
-- Quit the application
-
-## Discord Display
-
-When watching a TV show:
-```
-Fallout - The Innovator
-S02E01 | 25:18 / 1:02:27
-```
-
-When watching a movie:
-```
-Inception (2010)
-1:23:45 / 2:28:00
-```
+- Open Config - Edit configuration file
+- Start at Boot - Toggle Windows startup
+- Quit - Exit the application
 
 ## Requirements
 
-- Windows 10/11, Linux, or macOS
+- Windows 10/11
 - Plex Media Server (local or remote)
-- Discord
+- Discord desktop app
 
 ## License
 

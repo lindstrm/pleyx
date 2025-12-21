@@ -1,0 +1,7 @@
+// Windows resource file for Pleyx
+
+#include "resource.h"
+
+// Application icon (for exe in Explorer and tray)
+// ID 1 is the default exe icon
+IDI_ICON1 ICON "../resources/plex.ico"
