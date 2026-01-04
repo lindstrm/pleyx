@@ -267,12 +267,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
                     }
                 }
 
-                // Only show presence when playing
-                if (np.playerState == PlayerState::Playing) {
-                    setTrayIconPlaying(true);
+                // Show presence when playing, or when paused for movies/shows (but not music)
+                bool shouldShowPresence = (np.playerState == PlayerState::Playing) ||
+                    (np.playerState == PlayerState::Paused && np.mediaType != MediaType::Track);
+
+                if (shouldShowPresence) {
+                    setTrayIconPlaying(np.playerState == PlayerState::Playing);
                     MediaInfo info;
                     info.details = np.displayTitle();
-                    info.isPlaying = true;
+                    info.isPlaying = (np.playerState == PlayerState::Playing);
                     info.durationMs = np.durationMs;
                     info.progressMs = np.progressMs;
                     info.imdbId = np.imdbId;
@@ -287,28 +290,35 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
                     // Set state and activity type based on media type
                     switch (np.mediaType) {
-                        case MediaType::Episode:
+                        case MediaType::Episode: {
                             info.activityType = ActivityType::Watching;
                             info.details = np.grandparentTitle.value_or("TV Show");
                             info.largeImage = artUrl.empty() ? "tv" : artUrl;
                             info.largeText = np.grandparentTitle.value_or("Watching TV");
+                            std::string episodeState;
                             if (np.seasonNumber && np.episodeNumber) {
                                 char buf[128];
                                 snprintf(buf, sizeof(buf), "S%02dE%02d • %s",
                                     *np.seasonNumber, *np.episodeNumber, np.title.c_str());
-                                info.state = buf;
+                                episodeState = buf;
                             } else {
-                                info.state = np.title;
+                                episodeState = np.title;
                             }
+                            info.state = (np.playerState == PlayerState::Paused ? "Paused • " : "") + episodeState;
                             break;
+                        }
                         case MediaType::Movie: {
                             info.activityType = ActivityType::Watching;
                             info.largeImage = artUrl.empty() ? "movie" : artUrl;
                             info.largeText = np.title;
                             // Build state: ratings • genres
                             std::string stateStr;
+                            if (np.playerState == PlayerState::Paused) {
+                                stateStr = "Paused";
+                            }
                             if (np.imdbRating) {
-                                stateStr = *np.imdbRating;
+                                if (!stateStr.empty()) stateStr += " • ";
+                                stateStr += *np.imdbRating;
                             }
                             if (np.rottenTomatoesRating) {
                                 if (!stateStr.empty()) stateStr += " • ";
