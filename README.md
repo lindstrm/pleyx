@@ -101,6 +101,7 @@ These can be added manually to enable additional features:
 
 ```json
 {
+    "plex_username": "YourPlexUsername",
     "omdb_api_key": "your_omdb_api_key",
     "debug": true
 }
@@ -108,6 +109,7 @@ These can be added manually to enable additional features:
 
 | Option | Description |
 |--------|-------------|
+| `plex_username` | Only show playback from this Plex user (useful for shared servers) |
 | `omdb_api_key` | OMDB API key for posters and ratings ([get one free](https://www.omdbapi.com/apikey.aspx)) |
 | `debug` | Show console window with debug output |
 

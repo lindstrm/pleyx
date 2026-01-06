@@ -164,11 +164,14 @@ std::string NowPlaying::stateText() const {
     }
 }
 
-PlexClient::PlexClient(const std::string& serverUrl, const std::string& token)
-    : serverUrl(serverUrl), token(token) {
+PlexClient::PlexClient(const std::string& serverUrl, const std::string& token, const std::string& username)
+    : serverUrl(serverUrl), token(token), filterUsername(username) {
     // Remove trailing slash
     while (!this->serverUrl.empty() && this->serverUrl.back() == '/') {
         this->serverUrl.pop_back();
+    }
+    if (!filterUsername.empty()) {
+        std::cout << "[Plex] Filtering sessions to user: " << filterUsername << std::endl;
     }
 }
 
@@ -310,9 +313,19 @@ std::optional<NowPlaying> PlexClient::getNowPlaying() {
         }
 
         // Find the best session: prefer "playing" over others, take last in array
+        // If filterUsername is set, only consider sessions for that user
         const json* bestSession = nullptr;
         for (auto it = metadataArray.rbegin(); it != metadataArray.rend(); ++it) {
             auto& item = *it;
+
+            // Filter by username if configured
+            if (!filterUsername.empty() && item.contains("User")) {
+                std::string sessionUser = item["User"].value("title", "");
+                if (sessionUser != filterUsername) {
+                    continue;  // Skip sessions from other users
+                }
+            }
+
             if (item.contains("Player")) {
                 std::string state = item["Player"].value("state", "");
                 if (state == "playing") {

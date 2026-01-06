@@ -192,7 +192,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
     }
 
     // Test Plex connection
-    PlexClient plex(config.plexUrl, config.plexToken);
+    PlexClient plex(config.plexUrl, config.plexToken, config.plexUsername);
     if (!plex.testConnection()) {
         MessageBoxW(nullptr,
             L"Failed to connect to Plex server.\n\nPlease check your configuration.",
@@ -292,33 +292,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
                     switch (np.mediaType) {
                         case MediaType::Episode: {
                             info.activityType = ActivityType::Watching;
-                            info.details = np.grandparentTitle.value_or("TV Show");
+                            std::string showTitle = np.grandparentTitle.value_or("TV Show");
+                            info.details = (np.playerState == PlayerState::Paused ? "(Paused) " : "") + showTitle;
                             info.largeImage = artUrl.empty() ? "tv" : artUrl;
                             info.largeText = np.grandparentTitle.value_or("Watching TV");
-                            std::string episodeState;
                             if (np.seasonNumber && np.episodeNumber) {
                                 char buf[128];
                                 snprintf(buf, sizeof(buf), "S%02dE%02d • %s",
                                     *np.seasonNumber, *np.episodeNumber, np.title.c_str());
-                                episodeState = buf;
+                                info.state = buf;
                             } else {
-                                episodeState = np.title;
+                                info.state = np.title;
                             }
-                            info.state = (np.playerState == PlayerState::Paused ? "Paused • " : "") + episodeState;
                             break;
                         }
                         case MediaType::Movie: {
                             info.activityType = ActivityType::Watching;
+                            info.details = (np.playerState == PlayerState::Paused ? "(Paused) " : "") + np.displayTitle();
                             info.largeImage = artUrl.empty() ? "movie" : artUrl;
                             info.largeText = np.title;
                             // Build state: ratings • genres
                             std::string stateStr;
-                            if (np.playerState == PlayerState::Paused) {
-                                stateStr = "Paused";
-                            }
                             if (np.imdbRating) {
-                                if (!stateStr.empty()) stateStr += " • ";
-                                stateStr += *np.imdbRating;
+                                stateStr = *np.imdbRating;
                             }
                             if (np.rottenTomatoesRating) {
                                 if (!stateStr.empty()) stateStr += " • ";
