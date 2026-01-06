@@ -50,6 +50,7 @@ Config Config::load() {
 
             cfg.plexUrl = j.value("plex_url", "http://localhost:32400");
             cfg.plexToken = j.value("plex_token", "");
+            cfg.plexUsername = j.value("plex_username", "");
             cfg.omdbApiKey = j.value("omdb_api_key", "");
             cfg.pollingIntervalSecs = j.value("polling_interval_secs", 15);
             cfg.startAtBoot = j.value("start_at_boot", false);
@@ -72,6 +73,9 @@ void Config::save() const {
         {"start_at_boot", startAtBoot}
     };
     // Only include optional keys if set
+    if (!plexUsername.empty()) {
+        j["plex_username"] = plexUsername;
+    }
     if (!omdbApiKey.empty()) {
         j["omdb_api_key"] = omdbApiKey;
     }

@@ -6,6 +6,7 @@
 struct Config {
     std::string plexUrl;
     std::string plexToken;
+    std::string plexUsername;  // Optional: filter sessions to this user only
     std::string omdbApiKey;
     int pollingIntervalSecs = 15;
     bool startAtBoot = false;

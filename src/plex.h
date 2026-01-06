@@ -46,7 +46,7 @@ void setOmdbApiKey(const std::string& apiKey);
 
 class PlexClient {
 public:
-    PlexClient(const std::string& serverUrl, const std::string& token);
+    PlexClient(const std::string& serverUrl, const std::string& token, const std::string& username = "");
 
     std::optional<NowPlaying> getNowPlaying();
     bool testConnection();
@@ -57,4 +57,5 @@ private:
 
     std::string serverUrl;
     std::string token;
+    std::string filterUsername;  // Optional: only show sessions for this user
 };
